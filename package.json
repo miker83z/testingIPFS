@@ -1,0 +1,26 @@
+{
+  "name": "testingipfs",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/miker83z/testingIPFS.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/miker83z/testingIPFS/issues"
+  },
+  "homepage": "https://github.com/miker83z/testingIPFS#readme",
+  "dependencies": {
+    "axios": "^0.19.2",
+    "command-line-args": "^5.1.1",
+    "csv-writer": "^1.6.0",
+    "ipfs-http-client": "^43.0.1",
+    "n-readlines": "^1.0.0"
+  }
+}
