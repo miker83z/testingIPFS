@@ -7,6 +7,7 @@ import numpy as np
 import scipy.stats
 import math
 
+printFlag = True
 startingDir = 'datasetIPFS'
 totReqBus = 15
 totNum = len(next(os.walk(startingDir))[1])
@@ -74,6 +75,13 @@ def get_data():
                     tmpToAppend[2] += errorsNotWritten
 
                 tmpToAppend[0].append(tempTestData)
+                if printFlag:
+                    print('Test ' + tempTestData['name'] + '-' + typeDir +
+                          ':\t Avg= ' + str(round(np.mean(tempTestData['values'])/1000, 2)) +
+                          ':\t Std= ' + str(round(np.std(tempTestData['values'])/1000, 2)) +
+                          ',\t Err%= ' +
+                          str(round(
+                              (tempTestData['errors'] / (tempTestData['errors'] + len(tempTestData['values'])))*100, 2)))
             data[typeIndex].append(tmpToAppend)
 
             print('Test ' + numberDir + '-' + typeDir +
@@ -118,7 +126,7 @@ def plot1():
         labels.append('  ')
         b = a + width + distWidth
         positions.append(b)
-        labels.append(str(nmbrs[x]) + '\nbuses')
+        labels.append(str(nmbrs[x]))
         c = b + width + distWidth
         positions.append(c)
         labels.append('  ')
@@ -132,8 +140,9 @@ def plot1():
     #                sym = 'x', patch_artist = True)
     ax.set_xticks(positions)
     ax.set_xticklabels(labels, fontsize=15)
-    #ax.set_yticks(np.arange(0, np.max(ax.get_yticks()), step=1))
+    # ax.set_yticks(np.arange(0, np.max(ax.get_yticks()), step=1))
     ax.set_ylabel("latency (sec)", fontsize=13)
+    ax.set_xlabel("buses", fontsize=13)
 
     colors = ['tab:blue', 'tab:red', 'tab:green']
     for i, bar in enumerate(bp):
