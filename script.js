@@ -4,10 +4,12 @@ const createCsvWriter = require('csv-writer');
 const ipfsAPI = require('ipfs-http-client');
 const axios = require('axios').default;
 const secret = require('./secret.json');
+const skynet = require('@nebulous/skynet');
 
 const optionDefinitions = [
   { name: 'number', alias: 'n', type: Number, defaultValue: 10 },
   { name: 'await', alias: 'a', type: Number, defaultValue: 0 },
+  { name: 'image', alias: 'i', type: Boolean, defaultValue: false },
 ];
 const commandLineArgs = require('command-line-args');
 const options = commandLineArgs(optionDefinitions);
@@ -15,6 +17,8 @@ const options = commandLineArgs(optionDefinitions);
 // Constant Values
 const numberOfBuses = options.number;
 const awaitFor = options.await;
+const image = options.image;
+const imagePath = 'inputDatasets/image.jpg';
 const inputBuses = 'inputDatasets/inputDataset' + numberOfBuses + '.csv';
 const dirTemp = 'datasetIPFS/' + numberOfBuses + '/';
 const dirType = ['dataProp/', 'dataService/', 'dataSia/'];
@@ -138,14 +142,20 @@ const publishSia = async (b, id, json) => {
     //Start operations
     startTS = new Date().getTime();
 
-    const resp = await axios.post(
-      'https://siasky.net/skynet/skyfile/file/' +
-        JSON.stringify(json) +
-        '?filename=' +
+    if (image) {
+      a = skynet.DefaultUploadOptions;
+      a.customFilename = 's' + startTS;
+      const resp = await skynet.UploadFile(imagePath, a);
+    } else {
+      const resp = await axios.post(
+        'https://siasky.net/skynet/skyfile/file/' +
+          JSON.stringify(json) +
+          '?filename=' +
+          JSON.stringify(json),
         JSON.stringify(json),
-      JSON.stringify(json),
-      { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
-    );
+        { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+      );
+    }
 
     finishTS = new Date().getTime();
     //console.log(resp.data);
@@ -176,6 +186,9 @@ const publishSia = async (b, id, json) => {
 const go = async () => {
   const liner = new lineByLine(inputBuses);
   try {
+    const base64image = new Buffer(fs.readFileSync(imagePath)).toString(
+      'base64'
+    );
     let line = liner.next(); // read first line
     while ((line = liner.next())) {
       let row = line.toString('ascii').split(',');
@@ -184,11 +197,14 @@ const go = async () => {
       console.log('Waiting ' + row[0]);
       await sleep(parseInt(row[0]) * 1000);
       //console.log('Waited ' + row[0] + ' seconds for bus ' + row[1]);
+      const payloadValue = image
+        ? { photo: base64image }
+        : { latitude: row[2], longitude: row[3] };
       publish(
         row[1],
         row[4],
         {
-          payload: { latitude: row[2], longitude: row[3] },
+          payload: payloadValue,
           timestampISO: new Date().toISOString(),
         },
         0
@@ -198,15 +214,12 @@ const go = async () => {
         row[1],
         row[4],
         {
-          payload: { latitude: row[2], longitude: row[3] },
+          payload: payloadValue,
           timestampISO: new Date().toISOString(),
         },
         1
       );
-      publishSia(row[1], row[4], {
-        payload: { latitude: row[2], longitude: row[3] },
-        timestampISO: new Date().toISOString(),
-      });
+      publishSia(row[1], row[4]);
     }
   } catch (error) {
     console.log(error);
