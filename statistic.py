@@ -7,8 +7,9 @@ import numpy as np
 import scipy.stats
 import math
 
-printFlag = True
+printFlag = False
 startingDir = 'datasetIPFS'
+errorsFlag = True
 totReqBus = 15
 totNum = len(next(os.walk(startingDir))[1])
 
@@ -102,18 +103,29 @@ def plot1():
     nmbrs = []
     flag = True
     sumNum = 0
-    for typ in data:
-        mulNum = 0
-        for num in typ:
-            tmp = np.array(num[1])
-            allLatenciesTemp[sumNum+mulNum] = tmp
-            avg[mulNum+sumNum] = round(np.mean(tmp)/1000, 2)
-            err[sumNum+mulNum] = avg[mulNum+sumNum] - confInt(tmp, .9)[0]
-            mulNum += len(data)
-            if flag:
-                nmbrs.append(num[3])
-        sumNum += 1
-        flag = False
+    if errorsFlag:
+        for typ in data:
+            mulNum = 0
+            for num in typ:
+                avg[mulNum+sumNum] = num[2] / (len(num[1]) + num[2])
+                mulNum += len(data)
+                if flag:
+                    nmbrs.append(num[3])
+            sumNum += 1
+            flag = False
+    else:
+        for typ in data:
+            mulNum = 0
+            for num in typ:
+                tmp = np.array(num[1])
+                allLatenciesTemp[sumNum+mulNum] = tmp
+                avg[mulNum+sumNum] = round(np.mean(tmp)/1000, 2)
+                err[sumNum+mulNum] = avg[mulNum+sumNum] - confInt(tmp, .9)[0]
+                mulNum += len(data)
+                if flag:
+                    nmbrs.append(num[3])
+            sumNum += 1
+            flag = False
 
     width = .6
     distWidth = .05
@@ -141,7 +153,10 @@ def plot1():
     ax.set_xticks(positions)
     ax.set_xticklabels(labels, fontsize=15)
     # ax.set_yticks(np.arange(0, np.max(ax.get_yticks()), step=1))
-    ax.set_ylabel("latency (sec)", fontsize=13)
+    if errorsFlag:
+        ax.set_ylabel("errors (%)")
+    else:
+        ax.set_ylabel("latency (sec)", fontsize=13)
     ax.set_xlabel("buses", fontsize=13)
 
     colors = ['tab:blue', 'tab:red', 'tab:green']

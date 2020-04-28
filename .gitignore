@@ -1,5 +1,5 @@
 secret.json
-node_modules/
 *.sh
 *.out
 
+node_modules
