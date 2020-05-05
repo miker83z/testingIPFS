@@ -31,9 +31,7 @@ const ipfsProp = ipfsAPI({
   protocol: 'http',
 });
 
-let propFlag,
-  serviceFlag,
-  siaFlag = true;
+let propFlag = (serviceFlag = siaFlag = true);
 if (options.prop || options.service || options.sia) {
   propFlag = options.prop;
   serviceFlag = options.service;

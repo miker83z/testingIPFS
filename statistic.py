@@ -9,7 +9,7 @@ import math
 
 printFlag = False
 startingDir = 'datasetIPFS'
-errorsFlag = True
+errorsFlag = False
 totReqBus = 15
 totNum = len(next(os.walk(startingDir))[1])
 
@@ -95,8 +95,10 @@ def get_data():
 
 def plot1():
     fig, ax = plt.subplots(constrained_layout=True)
-    fig.set_size_inches(11, 11)
+    fig.set_size_inches(7, 7)
     # plt.yscale('log')
+    if errorsFlag:
+        plt.ylim(0, 1)
     allLatenciesTemp = [[] for x in range(totNum * len(data))]
     err = np.zeros(totNum * len(data))
     avg = np.zeros(totNum * len(data))
@@ -120,7 +122,8 @@ def plot1():
                 tmp = np.array(num[1])
                 allLatenciesTemp[sumNum+mulNum] = tmp
                 avg[mulNum+sumNum] = round(np.mean(tmp)/1000, 2)
-                err[sumNum+mulNum] = avg[mulNum+sumNum] - confInt(tmp, .9)[0]
+                #err[sumNum+mulNum] = avg[mulNum+sumNum] - confInt(tmp, .95)[0]
+                err[sumNum+mulNum] = round(np.std(tmp)/1000, 2)
                 mulNum += len(data)
                 if flag:
                     nmbrs.append(num[3])
@@ -145,7 +148,7 @@ def plot1():
         startNum = c + width
 
     bp = ax.bar(positions, avg, .5, yerr=err,
-                align='center', ecolor='black', capsize=10)
+                align='center', ecolor='black', capsize=2)
     ax.yaxis.grid(True)
 
     # bp = ax.boxplot(allLatenciesTemp, positions=positions,
@@ -154,10 +157,10 @@ def plot1():
     ax.set_xticklabels(labels, fontsize=15)
     # ax.set_yticks(np.arange(0, np.max(ax.get_yticks()), step=1))
     if errorsFlag:
-        ax.set_ylabel("errors (%)")
+        ax.set_ylabel("errors (%)", fontsize=15)
     else:
-        ax.set_ylabel("latency (sec)", fontsize=13)
-    ax.set_xlabel("buses", fontsize=13)
+        ax.set_ylabel("latency (sec)", fontsize=15)
+    ax.set_xlabel("users", fontsize=15)
 
     colors = ['tab:blue', 'tab:red', 'tab:green']
     for i, bar in enumerate(bp):
@@ -165,7 +168,7 @@ def plot1():
 
     # ax2 = ax.twinx()
     # ylab2 = 'Errors (%)'
-    # ax2.set_ylabel(ylab2, fontsize=13)
+    # ax2.set_ylabel(ylab2, fontsize=15)
     # ax2.plot(positions[0:3], err[0:3], color='gold', marker='*', markeredgecolor='black', markersize=15, zorder=10)
     # ax2.plot(positions[3:6], err[3:6], color='gold', marker='*', markeredgecolor='black', markersize=15, zorder=10)
     # ax2.plot(positions[6:9], err[6:9], color='gold', marker='*', markeredgecolor='black', markersize=15, zorder=10)
