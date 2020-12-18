@@ -7,14 +7,6 @@ import numpy as np
 import scipy.stats
 import math
 
-printFlag = False
-startingDir = 'datasetIPFS'
-errorsFlag = False
-totReqBus = 15
-totNum = len(next(os.walk(startingDir))[1])
-
-data = [[], [], []]
-
 
 def confInt(data, confidence=0.95):
     a = 1.0 * np.array(data)
@@ -31,7 +23,7 @@ def ecdf(data):
     return(x, y)
 
 
-def get_data():
+def get_data(data, startingDir, totReqBus, printFlag):
     path = os.walk(startingDir)
     startDir = next(path)
     startDir[1].sort(key=lambda x: int(x))
@@ -93,100 +85,90 @@ def get_data():
         print('\n')
 
 
-def plot1():
-    fig, ax = plt.subplots(constrained_layout=True)
-    fig.set_size_inches(7, 7)
+def plot(data, totNum, lstyl, lwid):
     # plt.yscale('log')
-    if errorsFlag:
-        plt.ylim(0, 1)
-    allLatenciesTemp = [[] for x in range(totNum * len(data))]
-    err = np.zeros(totNum * len(data))
-    avg = np.zeros(totNum * len(data))
+    err = [np.zeros(totNum), np.zeros(totNum), np.zeros(totNum)]
+    avg = [np.zeros(totNum), np.zeros(totNum), np.zeros(totNum)]
     nmbrs = []
     flag = True
-    sumNum = 0
-    if errorsFlag:
-        for typ in data:
-            mulNum = 0
-            for num in typ:
-                avg[mulNum+sumNum] = num[2] / (len(num[1]) + num[2])
-                mulNum += len(data)
-                if flag:
-                    nmbrs.append(num[3])
-            sumNum += 1
-            flag = False
-    else:
-        for typ in data:
-            mulNum = 0
-            for num in typ:
-                tmp = np.array(num[1])
-                allLatenciesTemp[sumNum+mulNum] = tmp
-                avg[mulNum+sumNum] = round(np.mean(tmp)/1000, 2)
-                #err[sumNum+mulNum] = avg[mulNum+sumNum] - confInt(tmp, .95)[0]
-                err[sumNum+mulNum] = round(np.std(tmp)/1000, 2)
-                mulNum += len(data)
-                if flag:
-                    nmbrs.append(num[3])
-            sumNum += 1
-            flag = False
 
-    width = .6
-    distWidth = .05
-    positions = []
-    labels = []
-    startNum = .5
-    for x in range(totNum):
-        a = startNum + width
-        positions.append(a)
-        labels.append('  ')
-        b = a + width + distWidth
-        positions.append(b)
-        labels.append(str(nmbrs[x]))
-        c = b + width + distWidth
-        positions.append(c)
-        labels.append('  ')
-        startNum = c + width
+    serviceTypeNum = 0
+    for serviceType in data:
+        usersNumberNum = 0
+        for usersNumber in serviceType:
+            tmp = np.array(usersNumber[1])
+            avg[serviceTypeNum][usersNumberNum] = round(np.mean(tmp), 2)
+            #err[serviceTypeNum+usersNumberNum] = avg[usersNumberNum+serviceTypeNum] - confInt(tmp, .95)[0]
+            err[serviceTypeNum][usersNumberNum] = usersNumber[2]
+            usersNumberNum += 1
+            if flag:
+                nmbrs.append(usersNumber[3])
+        serviceTypeNum += 1
+        flag = False
 
-    bp = ax.bar(positions, avg, .5, yerr=err,
-                align='center', ecolor='black', capsize=2)
-    ax.yaxis.grid(True)
+    colors = ['brown', 'royalblue', 'tab:green']
 
-    # bp = ax.boxplot(allLatenciesTemp, positions=positions,
-    #                sym = 'x', patch_artist = True)
-    ax.set_xticks(positions)
-    ax.set_xticklabels(labels, fontsize=15)
-    # ax.set_yticks(np.arange(0, np.max(ax.get_yticks()), step=1))
-    if errorsFlag:
-        ax.set_ylabel("errors (%)", fontsize=15)
-    else:
-        ax.set_ylabel("latency (sec)", fontsize=15)
-    ax.set_xlabel("users", fontsize=15)
+    ax[0].plot(nmbrs, avg[0]/nmbrs, linestyle=lstyl,
+               linewidth=lwid, color=colors[0])
+    ax[0].plot(nmbrs, avg[1]/nmbrs, linestyle=lstyl,
+               linewidth=lwid, color=colors[1])
+    ax[0].plot(nmbrs, avg[2]/nmbrs, linestyle=lstyl,
+               linewidth=lwid, color=colors[2])
 
-    colors = ['tab:blue', 'tab:red', 'tab:green']
-    for i, bar in enumerate(bp):
-        bar.set_color(colors[i % 3])
+    ax[1].plot(nmbrs, err[0]/nmbrs, linestyle=lstyl,
+               linewidth=lwid, color=colors[0])
+    ax[1].plot(nmbrs, err[1]/nmbrs, linestyle=lstyl,
+               linewidth=lwid, color=colors[1])
+    ax[1].plot(nmbrs, err[2]/nmbrs, linestyle=lstyl,
+               linewidth=lwid, color=colors[2])
 
-    # ax2 = ax.twinx()
-    # ylab2 = 'Errors (%)'
-    # ax2.set_ylabel(ylab2, fontsize=15)
-    # ax2.plot(positions[0:3], err[0:3], color='gold', marker='*', markeredgecolor='black', markersize=15, zorder=10)
-    # ax2.plot(positions[3:6], err[3:6], color='gold', marker='*', markeredgecolor='black', markersize=15, zorder=10)
-    # ax2.plot(positions[6:9], err[6:9], color='gold', marker='*', markeredgecolor='black', markersize=15, zorder=10)
-    # ax2.set_ylim([0, 0.5])
+    ax[1].set_xticks(np.arange(10, 101, 10))
+    #ax[1].set_ylim(0, 0.012)
+    # ax[0].set_xscale('log')
+    # ax[0].set_yscale('log')
 
-    # star = mlines.Line2D([], [], color='gold', marker='*', linestyle='None', markeredgecolor='black',
-    #                      markersize=15, label='Errors')
-    # diamond = mlines.Line2D([], [], color='w', marker='D', linestyle='None', markeredgecolor='black',
-    #                        markersize=10, label='Averages')
+    ax[0].set_ylabel('relative latency (ms/users count)')
+    ax[1].set_ylabel('relative errors (errors/users count)')
+    ax[1].set_xlabel('users count')
 
     patch1 = mpatches.Patch(color=colors[0], label='IPFS Proprietary')
     patch2 = mpatches.Patch(color=colors[1], label='IPFS Service')
     patch3 = mpatches.Patch(color=colors[2], label='Sia Skynet')
+    soli = mlines.Line2D([], [], color='black',
+                         linestyle='dotted', label='100 B')
+    dott = mlines.Line2D([], [], color='black',
+                         linestyle='solid', label='1 MB')
 
-    ax.legend(handles=[patch1, patch2, patch3], fontsize='x-large')
+    ax[0].legend(handles=[patch1, patch2, patch3,
+                          soli, dott], fontsize='x-large')
 
 
-get_data()
-plot1()
+def small():
+    startingDir = 'datasetIPFS'
+    totNum = len(next(os.walk(startingDir))[1])
+    data = [[], [], []]
 
-plt.show()
+    get_data(data, startingDir, 15, False)
+    # plot1()
+    plot(data, totNum, 'dotted', 3)
+
+
+def big():
+    startingDir = 'datasetIPFSImage'
+    totNum = len(next(os.walk(startingDir))[1])
+    data = [[], [], []]
+
+    get_data(data, startingDir, 15, False)
+    # plot1()
+    plot(data, totNum, 'solid', 2)
+
+
+heights = [2, 1]
+fig, ax = plt.subplots(
+    nrows=2, ncols=1, sharex=True, constrained_layout=True, gridspec_kw=dict(height_ratios=heights))
+fig.set_size_inches(7, 7)
+
+small()
+big()
+
+plt.savefig('complete.png', bbox_inches='tight', dpi=300)
