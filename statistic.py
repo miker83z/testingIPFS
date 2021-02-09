@@ -99,7 +99,8 @@ def plot(data, totNum, lstyl, lwid):
             tmp = np.array(usersNumber[1])
             avg[serviceTypeNum][usersNumberNum] = round(np.mean(tmp), 2)
             #err[serviceTypeNum+usersNumberNum] = avg[usersNumberNum+serviceTypeNum] - confInt(tmp, .95)[0]
-            err[serviceTypeNum][usersNumberNum] = usersNumber[2]
+            err[serviceTypeNum][usersNumberNum] = usersNumber[2] / \
+                (usersNumber[2] + len(usersNumber[1]))
             usersNumberNum += 1
             if flag:
                 nmbrs.append(usersNumber[3])
@@ -115,11 +116,11 @@ def plot(data, totNum, lstyl, lwid):
     ax[0].plot(nmbrs, avg[2]/nmbrs, linestyle=lstyl,
                linewidth=lwid, color=colors[2])
 
-    ax[1].plot(nmbrs, err[0]/nmbrs, linestyle=lstyl,
+    ax[1].plot(nmbrs, err[0], linestyle=lstyl,
                linewidth=lwid, color=colors[0])
-    ax[1].plot(nmbrs, err[1]/nmbrs, linestyle=lstyl,
+    ax[1].plot(nmbrs, err[1], linestyle=lstyl,
                linewidth=lwid, color=colors[1])
-    ax[1].plot(nmbrs, err[2]/nmbrs, linestyle=lstyl,
+    ax[1].plot(nmbrs, err[2], linestyle=lstyl,
                linewidth=lwid, color=colors[2])
 
     ax[1].set_xticks(np.arange(10, 101, 10))
@@ -127,9 +128,9 @@ def plot(data, totNum, lstyl, lwid):
     # ax[0].set_xscale('log')
     # ax[0].set_yscale('log')
 
-    ax[0].set_ylabel('relative latency (ms/users count)')
-    ax[1].set_ylabel('relative errors (errors/users count)')
-    ax[1].set_xlabel('users count')
+    ax[0].set_ylabel('latency per user (ms/#users)')
+    ax[1].set_ylabel('%errors')
+    ax[1].set_xlabel('#users')
 
     patch1 = mpatches.Patch(color=colors[0], label='IPFS Proprietary')
     patch2 = mpatches.Patch(color=colors[1], label='IPFS Service')
